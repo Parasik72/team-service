@@ -1,42 +1,62 @@
-import { DataTypes, Model} from 'sequelize'
-import dbInstance from '../db/instantiate-sequalize';
+import { Column, Model, Table, DataType, HasOne, BelongsToMany} from 'sequelize-typescript';
+import { Role } from '../roles/roles.model';
+import { ResetToken } from '../reset-token/reset-token.model';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserRole } from './user-role.model';
 
 interface UserAttributes {
-    id: number;
+    id: string;
     email: string;
     password: string;
     firstName: string;
     lastName: string;
+    isGoogleAccount: boolean;
 }
 
-export class User extends Model<UserAttributes, CreateUserDto>{}
-User.init({
-    id: {
-        type: DataTypes.INTEGER,
+@Table({tableName: 'User', timestamps: false})
+export class User extends Model<UserAttributes, CreateUserDto>{
+    @Column({
+        type: DataType.STRING, 
         unique: true,
-        autoIncrement: true,
         primaryKey: true
-    },
-    email: {
-        type: DataTypes.STRING,
+    })
+    declare id: string;
+
+    @Column({
+        type: DataType.STRING,
         unique: true,
         allowNull: false
-    },
-    password: {
-        type: DataTypes.STRING,
+    })
+    declare email: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+        defaultValue: ''
+    })
+    declare password: string;
+
+    @Column({
+        type: DataType.STRING,
         allowNull: false
-    },
-    firstName: {
-        type: DataTypes.STRING,
+    })
+    declare firstName: string;
+
+    @Column({
+        type: DataType.STRING,
         allowNull: false
-    },
-    lastName: {
-        type: DataTypes.STRING,
-        allowNull: false
-    }
-}, {
-    sequelize: dbInstance,
-    modelName: 'User',
-    timestamps: false
-});
+    })
+    declare lastName: string;
+
+    @Column({
+        type: DataType.BOOLEAN,
+        defaultValue: false
+    })
+    declare isGoogleAccount: boolean;
+
+    @HasOne(() => ResetToken)
+    declare resetToken: ResetToken;
+
+    @BelongsToMany(() => Role, () => UserRole)
+    declare roles: Role[];
+}

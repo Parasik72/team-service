@@ -1,4 +1,5 @@
 import {Request, Response} from 'express'
+import * as bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
 import { Service } from 'typedi';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,7 +18,11 @@ export class UsersController{
             const candidate = await this.usersService.getUserByEmail(dto.email);
             if(candidate)
                 return res.status(400).json({message: 'This email is already in use.'});
-            const newUser = await this.usersService.createUser(dto);
+            const hashPassword = await bcrypt.hash(dto.password!, 5);
+            const userId = await this.usersService.generateUserId();
+            const newUser = await this.usersService.createUser({...dto, password: hashPassword, id: userId});
+            if(!newUser)
+                return res.status(500).json({message: 'Error creating user.'});
             return res.status(201).json(newUser);
         } catch (error) {
             console.log(error);
@@ -40,7 +45,7 @@ export class UsersController{
             const {id} = req.params;
             if(!id)
                 return res.status(400).json({message: 'User was not found.'});
-            const user = await this.usersService.getUserById(Number(id));
+            const user = await this.usersService.getUserById(String(id));
             if(!user)
                 return res.status(400).json({message: 'User was not found.'});
             return res.json(user);
@@ -64,7 +69,7 @@ export class UsersController{
                 if(checkEmail)
                     return res.status(400).json({message: 'This email is already in use.'});
             }
-            const user = await this.usersService.updateUser(dto, Number(id));
+            const user = await this.usersService.updateUser(dto, String(id));
             if(!user)
                 return res.status(400).json({message: 'User was not found.'});
             return res.json(user);
@@ -79,7 +84,7 @@ export class UsersController{
             const {id} = req.params;
             if(!id)
                 return res.status(400).json({message: 'User was not found.'});
-            const userId = await this.usersService.deleteUser(Number(id));
+            const userId = await this.usersService.deleteUser(String(id));
             if(!userId)
                 return res.status(400).json({message: 'User was not found.'});
             return res.json({message: `The user 'ID: ${userId}' was deleted.`});

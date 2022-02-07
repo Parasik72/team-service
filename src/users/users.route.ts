@@ -1,6 +1,8 @@
 import express from 'express';
-import { body, check } from 'express-validator';
+import { check } from 'express-validator';
 import Container from 'typedi';
+import { isLogedIn } from '../middlewares/is-logged-in.middleware';
+import { Roles } from '../middlewares/roles.middleware';
 import { UsersController } from './users.controller';
 
 export const UsersRouter = express();
@@ -8,6 +10,8 @@ const Controller = Container.get(UsersController);
 
 // 'POST' /users
 UsersRouter.post('/', [
+    isLogedIn,
+    Roles(['ADMIN']),
     check('email', 'Incorrect email').isString().isEmail(),
     check('password', 'The password must have a minimum of 5 characters and a maximum of 30')
         .isString()
@@ -23,11 +27,19 @@ UsersRouter.post('/', [
 ], async (req: any, res: any) => Controller.create(req, res));
 
 // 'GET' /users
-UsersRouter.get('/', async (req, res) => Controller.getAll(req, res));
-UsersRouter.get('/:id', async (req, res) => Controller.getOne(req, res));
+UsersRouter.get('/',[
+    isLogedIn,
+    Roles(['PLAYER']),
+], async (req: any, res: any) => Controller.getAll(req, res));
+UsersRouter.get('/:id', [
+    isLogedIn,
+    Roles(['ADMIN'])
+], async (req: any, res: any) => Controller.getOne(req, res));
 
 // 'PATCH' /users
 UsersRouter.patch('/:id',[
+    isLogedIn,
+    Roles(['ADMIN']),
     check('email', 'Incorrect email').optional().isString().isEmail(),
     check('password', 'The password must have a minimum of 5 characters and a maximum of 30')
         .optional()
@@ -46,4 +58,7 @@ UsersRouter.patch('/:id',[
 ], async (req: any, res: any) => Controller.update(req, res));
 
 // 'DELETE' /users
-UsersRouter.delete('/:id', async (req, res) => Controller.delete(req, res));
+UsersRouter.delete('/:id', [
+    isLogedIn,
+    Roles(['ADMIN'])
+], async (req: any, res: any) => Controller.delete(req, res));
