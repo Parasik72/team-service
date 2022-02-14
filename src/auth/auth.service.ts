@@ -2,18 +2,20 @@ import { Service } from "typedi";
 import transporter from "../email/transporter";
 import { User } from "../users/users.model";
 import jwt from 'jsonwebtoken'
+import { jwtPayloadDto } from "./dto/jwtPayload.dto";
 
 @Service()
 export class AuthService {
     async generateToken(user: User): Promise<string> {
         const roles = await user.$get('roles');
-        const payload = {
+        const payload: jwtPayloadDto = {
             id: user.id,
             email: user.email,
+            isGoogleAccount: user.isGoogleAccount,
             roles: roles
         }
         const secret = process.env.JWT_SECRET || 'jwtsecret';
-        return jwt.sign(payload, secret, {expiresIn: '2h'});
+        return jwt.sign(payload, secret, {expiresIn: '1h'});
     }
 
     async sendEmail(to: string, subject: string, text: string){

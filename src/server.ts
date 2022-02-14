@@ -2,18 +2,18 @@ import 'reflect-metadata';
 import 'dotenv/config'
 import './passport/passport';
 import express from 'express';
-import { UsersRouter } from './users/users.route';
-import { AuthRouter } from './auth/auth.route';
-import { RolesRouter } from './roles/roles.route';
-import dbInstance from './db/instantiate-sequalize';
-import {Server} from 'ws';
+import dbInstance from './db/instantiate-sequelize';
+import { Server } from 'ws';
 import session from 'express-session';
 import sessionStore from './db/instantiate-session-store';
 import passport from 'passport';
+import { Router } from './routes';
+import fileUpload from 'express-fileupload';
 
 const PORT = process.env.PORT || 5000;
 const WS_PORT = Number(process.env.WS_PORT) || 6000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'secret';
+const STATIC_PATH = process.env.STATIC_PATH || 'static_path';
 
 const wss = new Server({port: WS_PORT});
 const app = express();
@@ -35,28 +35,20 @@ wss.on('connection', (ws) => {
     });
 });
 
+app.use(fileUpload({
+    limits: { fileSize: 20 * 1024 * 1024 }
+}));
 app.use(express.json());
+app.use(express.static(STATIC_PATH));
 app.use(passport.initialize());
 app.use(passport.session());
 app.set('view engine', 'ejs');
-app.use('/auth', AuthRouter);
-app.use('/users', UsersRouter);
-app.use('/roles', RolesRouter);
-app.get('/echo', (req, res) => {
-    res.status(200).json({message: 'Hello world!'});
-});
-app.use('/ws', (req, res) => {
-    res.render('index', {WS_PORT});
-});
-
-app.use((req, res) => {
-    return res.status(404).json({message: 'The endpoint was not found!'});
-});
+app.use('/', Router);
 
 const start = async () => {
     try {
         await dbInstance.authenticate();
-        await dbInstance.sync();
+        await sessionStore.sync();
         console.log('Connection has been established successfully.');
         app.listen(PORT, () => console.log(`Server has been started on port: ${PORT}`));
     } catch (error) {

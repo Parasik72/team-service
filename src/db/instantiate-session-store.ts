@@ -1,6 +1,6 @@
 import connect  from 'connect-session-sequelize';
 import session from 'express-session'
-import dbInstance from './instantiate-sequalize';
+import dbInstance from './instantiate-sequelize';
 const SequelizeStore = connect(session.Store);
 
 const sessionStore = new SequelizeStore({

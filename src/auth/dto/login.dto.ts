@@ -1,4 +1,4 @@
 export interface LoginDto{
-    readonly email: string;
+    readonly login: string;
     readonly password: string;
 }

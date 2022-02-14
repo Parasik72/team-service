@@ -5,6 +5,7 @@ declare namespace NodeJS {
         WS_PORT: number;
         JWT_SECRET: string;
         SESSION_SECRET: string;
+        STATIC_PATH: string;
         POSTGRES_HOST: string;
         POSTGRES_PORT: number;
         POSTGRES_USERNAME: string;
@@ -17,5 +18,15 @@ declare namespace NodeJS {
         PASSPORT_CLIENT_ID: string;
         PASSPORT_CLIENT_SECRET: string;
         PASSPORT_CALLBACK_URL: string;
+    }
+}
+
+declare namespace Express {
+    export interface User {
+        id: string;
+        email: string;
+        isGoogleAccount: boolean;
+        roles: [];
+        bans: [];
     }
 }

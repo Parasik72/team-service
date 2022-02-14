@@ -1,0 +1,1 @@
+export type RoleType = 'PLAYER' | 'MANAGER' | 'ADMIN';

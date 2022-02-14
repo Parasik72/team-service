@@ -10,26 +10,35 @@ import { ForgotPassDto } from './dto/forgot-pass.dto';
 import { TokenService } from '../reset-token/reset-token.service';
 import { ResetPassDto } from './dto/reset-pass.dto';
 import { UserGoogleDto } from './dto/user-google.dto';
+import { ProfilesService } from '../profiles/profiles.service';
+import { GetAvatarDto } from '../users/dto/get-avatar.dto';
 
 @Service()
 export class AuthController{
     constructor(private authService: AuthService,
                 private usersService: UsersService,
-                private tokenService: TokenService){}
+                private tokenService: TokenService,
+                private profilesService: ProfilesService){}
     async register(req: Request, res: Response){
         try {
             const errors = validationResult(req);
             if(!errors.isEmpty())
                 return res.status(400).json({errors});
             const dto: CreateUserDto = req.body;
-            const candidate = await this.usersService.getUserByEmail(dto.email);
-            if(candidate)
+            const checkEmail = await this.usersService.getUserByEmail(dto.email);
+            if(checkEmail)
                 return res.status(400).json({message: 'This email is already in use.'});
+            const checkLogin = await this.usersService.getUserByLogin(dto.login);
+            if(checkLogin)
+                return res.status(400).json({message: 'This login is already in use.'});
             const hashPassword = await bcrypt.hash(dto.password!, 5);
             const userId = await this.usersService.generateUserId();
             const newUser = await this.usersService.createUser({...dto, password: hashPassword, id: userId});
             if(!newUser)
                 return res.status(500).json({message: 'Error creating user.'});
+            const avatarFile = req.files?.avatarFile;
+            if(avatarFile)
+                await this.profilesService.uploadAvatar(newUser, avatarFile);
             const token = await this.authService.generateToken(newUser);
             return res.status(201).json({token});
         } catch (error) {
@@ -40,15 +49,21 @@ export class AuthController{
 
     async login(req: Request, res: Response){
         try {
+            const errors = validationResult(req);
+            if(!errors.isEmpty())
+                return res.status(400).json({errors});
             const dto: LoginDto = req.body;
-            const user = await this.usersService.getUserByEmail(dto.email);
+            const user = await this.usersService.getUserByLogin(dto.login);
             if(!user)
                 return res.status(400).json({message: 'Incorect data'});
+            const isBanned = await this.usersService.isBanned(user);
+            if(isBanned)
+                return res.status(400).json({message: `BANNED! By: <${isBanned.bannedBy}> Reason: ${isBanned.banReason}`});
             const checkGoogleAccount = this.usersService.isGoogleAccount(user);
             if(checkGoogleAccount)
                 return res.status(400).json({message: `This is a google account. Use '/auth/google' url to login`});
             const hashPassword = String(user.get('password'));
-            const comparePasswords = await bcrypt.compare(dto.password,hashPassword);
+            const comparePasswords = await bcrypt.compare(dto.password, hashPassword);
             if(!comparePasswords)
                 return res.status(400).json({message: 'Incorect data'});
             const token = await this.authService.generateToken(user);
@@ -108,20 +123,25 @@ export class AuthController{
         }
     }
 
-    async successGoogleAuth(req: any, res: any) {
+    async successGoogleAuth(req: Request, res: Response) {
         try {
-            const dto: UserGoogleDto = req.user;
+            const dto = req.user as UserGoogleDto;
             const userId = dto.id + 'google';
             let user = await this.usersService.getUserById(userId);
             if(!user){
-                const checkEmail = await this.usersService.getUserByEmail(dto.email);
+                const checkEmail = await this.usersService.getUserByEmail(dto.email!);
                 if(checkEmail)
                     return res.status(400).json({message: 'This email is already in use'});
-                user = await this.usersService.createUser({...dto, id: userId, firstName: dto.given_name, lastName: dto.family_name});
+                user = await this.usersService.createUser({...dto, id: userId, firstName: dto.given_name!, lastName: dto.family_name!, login: dto.email});
                 if(!user)
                     return res.status(500).json({message: 'Error creating user.'});
                 user.set('isGoogleAccount', true);
+                user.avatar = dto.picture!;
                 await user.save();
+            } else {
+                const isBanned = await this.usersService.isBanned(user);
+                if(isBanned)
+                    return res.status(400).json({message: `BANNED! By: <${isBanned.bannedBy}> Reason: ${isBanned.banReason}`});
             }
             const token = await this.authService.generateToken(user);
             return res.json({token});
@@ -131,11 +151,11 @@ export class AuthController{
         }
     }
 
-    async failureGoogleAth(req: any, res: any){
+    async failureGoogleAth(req: Request, res: Response){
         return res.json(400).json({message: 'Failure login'});
     }
 
-    async logoutGoogle(req: any, res: any){
+    async logoutGoogle(req: Request, res: Response){
         req.session.destroy(()=>{});
         return res.json({message: 'Logged out from Google Account'})
     }

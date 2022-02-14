@@ -1,7 +1,13 @@
-export const Roles = (roles: string[]) => {
-    return (req: any, res: any, next: any) => {
+import {Request, Response, NextFunction} from 'express';
+import { jwtPayloadDto } from '../auth/dto/jwtPayload.dto';
+import { RoleType } from '../roles/roles.type';
+
+export const Roles = (roles: RoleType[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
         try {
-            const user = req.user;
+            if(req.method === 'OPTIONS')
+                return next();
+            const user = req.user as jwtPayloadDto;
             if(!user)
                 return res.status(401).json({message: 'No authorization'});
             for (const userRole of user.roles)

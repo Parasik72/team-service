@@ -3,6 +3,11 @@ import { Role } from '../roles/roles.model';
 import { ResetToken } from '../reset-token/reset-token.model';
 import { User } from '../users/users.model';
 import { UserRole } from '../users/user-role.model';
+import { Team } from '../teams/teams.model';
+import { TeamRequest } from '../team-requests/team-requests.model';
+import { TeamRequestApprovement } from '../team-request-approvement/team-requests-approvement.model';
+import { TeamKick } from '../team-kicks/team-kicks.model';
+import { Ban } from '../bans/bans.model';
 
 const POSTGRES_DATABASE = process.env.POSTGRES_DATABASE || 'database';
 const POSTGRES_USERNAME = process.env.POSTGRES_USERNAME || 'username';
@@ -19,8 +24,13 @@ const dbInstance = new Sequelize({
         User,
         ResetToken,
         Role,
-        UserRole
+        UserRole,
+        Team,
+        TeamRequest,
+        TeamRequestApprovement,
+        TeamKick,
+        Ban
     ]
-})
+});
 
 export default dbInstance;
