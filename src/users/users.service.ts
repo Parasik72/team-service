@@ -1,4 +1,4 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import { v4 } from "uuid";
 import { ProfilesService } from "../profiles/profiles.service";
 import { Role } from "../roles/roles.model";
@@ -6,50 +6,38 @@ import { RolesService } from "../roles/roles.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./users.model";
-import * as bcrypt from 'bcryptjs';
 import { TeamRequest } from "../team-requests/team-requests.model";
 import { RoleType } from "../roles/roles.type";
 import { Ban } from "../bans/bans.model";
-import { TeamsService } from "../teams/teams.service";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Service()
 export class UsersService {
     constructor(private rolesService: RolesService,
-                private profilesService: ProfilesService,
-                private teamsService: TeamsService){}
+                private profilesService: ProfilesService){}
     async createUser(dto: CreateUserDto): Promise<User | null>{
         const role = await this.rolesService.getRoleByValue('PLAYER');
         if(!role)
             return null;
-        const newUser = await User.create(dto);
-        await newUser.$set('roles', [role?.id!]);
-        newUser.roles = [role!];
+        const newUser = await User.create({...dto, roleId: role.id});
+        newUser.role = role;
         return newUser;
     }
 
     async getUserByEmail(email: string): Promise<User | null> {
-        const user = await User.findOne({where:{email}});
-        return user;
+        return await User.findOne({where:{email}, include: [Role]});
     }
 
     async getUserById(userId: string): Promise<User | null> {
-        const user = await User.findByPk(userId, {include: [Role, TeamRequest, Ban]});
-        return user;
+        return await User.findByPk(userId, {include: [Role, TeamRequest, Ban]});
     }
 
     async getAllUsers(): Promise<User[]>{
-        const users = await User.findAll({include: [Role, TeamRequest]});
-        return users;
+        return await User.findAll({include: [Role, TeamRequest]});
     }
 
-    async updateUser(dto: UpdateUserDto, userId: string): Promise<User | null>{
-        const user = await this.getUserById(userId);
-        if(!user)
-            return null;
-        let hashPassword: string | undefined = dto.password;
-        if(dto.password)
-            hashPassword = await bcrypt.hash(dto.password!, 5);
-        await user.update({...dto, password: hashPassword});
+    async updateUser(dto: UpdateUserDto | ChangePasswordDto, user: User): Promise<User>{
+        await user.update(dto);
         return user;
     }
 
@@ -59,11 +47,6 @@ export class UsersService {
             return null;
         if(user.avatar)
             this.profilesService.deleteFile(user.avatar);
-        if(user.teamId){
-            const team = await this.teamsService.getTeamById(user.teamId);
-            if(team)
-                await this.teamsService.kickUser(user, team);
-        }
         await user.destroy();
         return userId;
     }
@@ -82,8 +65,7 @@ export class UsersService {
     }
 
     async getUserByLogin(login: string): Promise<User | null> {
-        const user = await User.findOne({where: {login}, include: [Ban]});
-        return user;
+        return await User.findOne({where: {login}, include: [Ban, Role]});
     }
 
     async isAdmin(userId: string) {
@@ -94,9 +76,8 @@ export class UsersService {
         const role = await this.rolesService.getRoleByValue(adminRole);
         if(!role)
             return false;
-        for (const userRole of user.roles)
-            if(userRole.value === role.value)
-                return true;
+        if(user.role.value === role.value)
+            return true;
         return false;
     }
 

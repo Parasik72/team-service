@@ -11,6 +11,7 @@ import { GetAvatarDto } from './dto/get-avatar.dto';
 import { CreateBanDto } from '../bans/dto/create-ban.dto';
 import { BansService } from '../bans/bans.service';
 import { TeamsService } from '../teams/teams.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Service()
 export class UsersController{
@@ -79,6 +80,9 @@ export class UsersController{
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
                 return res.status(400).json({message: 'User was not found.'});
+            let user = await this.usersService.getUserById(dtoParams.userId);
+            if(!user)
+                return res.status(400).json({message: 'User was not found.'});
             if(dto.email){
                 const checkEmail = await this.usersService.getUserByEmail(dto.email);
                 if(checkEmail)
@@ -89,7 +93,7 @@ export class UsersController{
                 if(checkLogin)
                     return res.status(400).json({message: 'This login is already in use.'});
             }
-            const user = await this.usersService.updateUser(dto, dtoParams.userId);
+            user = await this.usersService.updateUser(dto, user);
             if(!user)
                 return res.status(400).json({message: 'User was not found.'});
             const avatarFile = req.files?.avatarFile;
@@ -165,6 +169,31 @@ export class UsersController{
         } catch (error) {
             console.log(error);
             return res.status(500).json({message: 'Error unbanning user.'});
+        }
+    }
+
+    async changePass(req: Request, res: Response){
+        try {
+            const errors = validationResult(req);
+            if(!errors.isEmpty())
+                return res.status(400).json({errors});
+            const dto: ChangePasswordDto = req.body;
+            const dtoParams: GetUserIdParamsDto = req.params;
+            if(!dtoParams.userId)
+                return res.status(400).json({message: 'User was not found.'});
+            let user = await this.usersService.getUserById(dtoParams.userId);
+            if(!user)
+                return res.status(400).json({message: 'User was not found.'});
+            if(this.usersService.isGoogleAccount(user))
+                return res.status(400).json({message: `Google account can't change his password.`});
+            if(dto.password){
+                const hashPassword = await bcrypt.hash(dto.password!, 5)
+                user = await this.usersService.updateUser({...dto, password: hashPassword}, user);
+            }
+            return res.json(user);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({message: 'Error changing user password.'});
         }
     }
 }

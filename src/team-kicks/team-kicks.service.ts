@@ -15,7 +15,6 @@ export class TeamKicksService {
     }
 
     async createTeamKick(dto: CreateTeamKickDto): Promise<TeamKick> {
-        const teamKick = await TeamKick.create(dto);
-        return teamKick;
+        return await TeamKick.create(dto);
     }
 }

@@ -5,8 +5,7 @@ import { ResetToken } from "./reset-token.model";
 @Service()
 export class TokenService {
     async getTokenByUserId(userId: string): Promise<ResetToken | null> {
-        const token = await ResetToken.findOne({where: {userId}});
-        return token;
+        return await ResetToken.findOne({where: {userId}});
     }
 
     async createToken(userId: string, value: string): Promise<ResetToken>{

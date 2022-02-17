@@ -2,7 +2,7 @@ import {Sequelize} from 'sequelize-typescript';
 import { Role } from '../roles/roles.model';
 import { ResetToken } from '../reset-token/reset-token.model';
 import { User } from '../users/users.model';
-import { UserRole } from '../users/user-role.model';
+// import { UserRole } from '../users/user-role.model';
 import { Team } from '../teams/teams.model';
 import { TeamRequest } from '../team-requests/team-requests.model';
 import { TeamRequestApprovement } from '../team-request-approvement/team-requests-approvement.model';
@@ -24,7 +24,7 @@ const dbInstance = new Sequelize({
         User,
         ResetToken,
         Role,
-        UserRole,
+        // UserRole,
         Team,
         TeamRequest,
         TeamRequestApprovement,

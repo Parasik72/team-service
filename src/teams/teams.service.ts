@@ -1,25 +1,23 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import { Team } from "./teams.model";
 import * as uuid from 'uuid';
 import { CreateTeamDto } from "./dto/create-team.dto";
 import { User } from "../users/users.model";
 import { TeamRequest } from "../team-requests/team-requests.model";
-import { UsersService } from "../users/users.service";
 import { RolesService } from "../roles/roles.service";
 import { TeamKick } from "../team-kicks/team-kicks.model";
+import { UsersService } from "../users/users.service";
 
 @Service()
 export class TeamsService {
-    constructor(private usersService: UsersService,
-                private rolesService: RolesService){}
+    constructor(private rolesService: RolesService,
+                private usersService: UsersService){}
     async getTeamByName(teamName: string): Promise<Team | null> {
-        const team = await Team.findOne({where: {teamName}});
-        return team;
+        return await Team.findOne({where: {teamName}});
     }
 
     async getTeamById(id: string): Promise<Team | null> {
-        const team = await Team.findByPk(id, {include: [User]});
-        return team;
+        return await Team.findByPk(id, {include: [User]});
     }
 
     async generateTeamId(): Promise<string> {
@@ -32,8 +30,7 @@ export class TeamsService {
     }
 
     async createTeam(dto: CreateTeamDto): Promise<Team> {
-        const team = await Team.create(dto);
-        return team;
+        return await Team.create(dto);
     }
 
     async addUserToTeam(user: User, team: Team): Promise<Team> {
@@ -43,8 +40,7 @@ export class TeamsService {
     }
 
     async getAll(): Promise<Team[]> {
-        const teams = await Team.findAll({include: [User, TeamRequest, TeamKick]});
-        return teams;
+        return await Team.findAll({include: [User, TeamRequest, TeamKick]});
     }
 
     userOnTheTeam(user: User, team: Team): boolean {
@@ -65,10 +61,10 @@ export class TeamsService {
 
     async unsetManagerTeam(user: User, team: Team): Promise<Team | null> {
         team.managerId = null;
-        const managerRole = await this.rolesService.getRoleByValue('MANAGER');
-        if(!managerRole)
+        const playerRole = await this.rolesService.getRoleByValue('PLAYER');
+        if(!playerRole)
             return null;
-        await this.rolesService.unsetRoleFromUser(managerRole, user);
+        await this.rolesService.setRoleToUser(playerRole, user);
         await team.save();
         return team;
     }
@@ -80,6 +76,17 @@ export class TeamsService {
         if(!manager)
             return null;
         return manager;
+    }
+
+    async managerPost(user: User, team: Team){
+        const checkUserOnTheTeam = this.userOnTheTeam(user, team);
+        console.log(this.rolesService);
+        if(!checkUserOnTheTeam)
+            await this.addUserToTeam(user, team);
+        const manager = await this.getManagerTeam(team);
+        if(manager)
+            await this.unsetManagerTeam(manager, team);
+        await this.setManagerTeam(user, team);
     }
 
     async leaveTheTeam(user: User, team: Team): Promise<User> {

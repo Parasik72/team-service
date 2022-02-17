@@ -17,13 +17,11 @@ export class TeamRequestsService {
     constructor(private teamsService: TeamsService,
                 private usersService: UsersService){}
     async createTeamRequest(dto: CreateTeamRequestDto): Promise<TeamRequest> {
-        const teamRequest = await TeamRequest.create(dto);
-        return teamRequest;
+        return await TeamRequest.create(dto);
     }
 
     async getAllTeamRequests(): Promise<TeamRequest[]> {
-        const teamRequess = await TeamRequest.findAll();
-        return teamRequess;
+        return await TeamRequest.findAll();
     }
 
     async generateTeamRequestsId(): Promise<string> {
@@ -43,8 +41,7 @@ export class TeamRequestsService {
     }
 
     async getTeamRequestById(id: string): Promise<TeamRequest | null> {
-        const teamRequest = await TeamRequest.findByPk(id, {include: [TeamRequestApprovement]});
-        return teamRequest;
+        return await TeamRequest.findByPk(id, {include: [TeamRequestApprovement]});
     }
 
     canUserSendAReqeust(user: User): boolean {
@@ -94,12 +91,8 @@ export class TeamRequestsService {
             await this.teamsService.leaveTheTeam(user, team);
         if(teamRequest.requestType === TeamRequestTypes.MOVE_TO_ANOTHER_TEAM)
             await this.teamsService.moveToAnotherTeam(user, teamRequest.teamRequestApprovement.toTeamId);
-        if(teamRequest.requestType === TeamRequestTypes.MANAGER_POST){
-            const checkUserOnTheTeam = this.teamsService.userOnTheTeam(user, team);
-            if(!checkUserOnTheTeam)
-                await this.teamsService.addUserToTeam(user, team);
-            await this.teamsService.setManagerTeam(user, team);
-        }
+        if(teamRequest.requestType === TeamRequestTypes.MANAGER_POST)
+            await this.teamsService.managerPost(user, team);
         return;
     }
 
@@ -114,7 +107,7 @@ export class TeamRequestsService {
             return new HttpException(400, 'The team was not found.');
         const canUserSendAReqeust = this.canUserSendAReqeust(user);
         if(!canUserSendAReqeust)
-            return new HttpException(400, 'This user has already awaiting a team request.');
+            return new HttpException(400, 'This user has already an awaiting team request.');
         return [user, team];
     }
 

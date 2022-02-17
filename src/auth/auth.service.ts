@@ -7,12 +7,11 @@ import { jwtPayloadDto } from "./dto/jwtPayload.dto";
 @Service()
 export class AuthService {
     async generateToken(user: User): Promise<string> {
-        const roles = await user.$get('roles');
         const payload: jwtPayloadDto = {
             id: user.id,
             email: user.email,
             isGoogleAccount: user.isGoogleAccount,
-            roles: roles
+            role: user.role.value
         }
         const secret = process.env.JWT_SECRET || 'jwtsecret';
         return jwt.sign(payload, secret, {expiresIn: '1h'});

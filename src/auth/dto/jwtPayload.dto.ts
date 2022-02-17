@@ -5,5 +5,5 @@ export interface jwtPayloadDto extends JwtPayload {
     id: string;
     email: string;
     isGoogleAccount: boolean;
-    roles: Role[];
+    role: string;
 }

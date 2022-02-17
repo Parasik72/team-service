@@ -1,8 +1,7 @@
-import { Column, Model, Table, DataType, HasOne, BelongsToMany, ForeignKey, BelongsTo, HasMany} from 'sequelize-typescript';
+import { Column, Model, Table, DataType, HasOne, ForeignKey, BelongsTo, HasMany} from 'sequelize-typescript';
 import { Role } from '../roles/roles.model';
 import { ResetToken } from '../reset-token/reset-token.model';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserRole } from './user-role.model';
 import { Team } from '../teams/teams.model';
 import { TeamRequest } from '../team-requests/team-requests.model';
 import { Ban } from '../bans/bans.model';
@@ -15,6 +14,7 @@ interface UserAttributes {
     firstName: string;
     lastName: string;
     isGoogleAccount: boolean;
+    roleId: string;
 }
 
 @Table({tableName: 'User', timestamps: false})
@@ -87,8 +87,15 @@ export class User extends Model<UserAttributes, CreateUserDto>{
     @BelongsTo(() => Team)
     declare team: Team;
 
-    @BelongsToMany(() => Role, () => UserRole)
-    declare roles: Role[];
+    @ForeignKey(() => Role)
+    @Column({
+        type: DataType.STRING,
+        allowNull: true
+    })
+    declare roleId: string;
+
+    @BelongsTo(() => Role, 'roleId')
+    declare role: Role;
 
     @HasMany(() => Ban)
     declare bans: Ban[];
@@ -100,7 +107,7 @@ declare global {
             id: string;
             email: string;
             isGoogleAccount: boolean;
-            roles: [];
+            role: string;
         }
     }
 }

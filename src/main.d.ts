@@ -26,7 +26,7 @@ declare namespace Express {
         id: string;
         email: string;
         isGoogleAccount: boolean;
-        roles: [];
+        role: string;
         bans: [];
     }
 }

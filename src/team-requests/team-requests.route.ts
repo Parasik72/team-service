@@ -25,7 +25,12 @@ TeamRequestsRouter.post('/move-to-another-team', [
 ], async (req: Request, res: Response) => Controller.moveToAnotherTeam(req, res));
 
 // 'GET' /team-requests
-TeamRequestsRouter.get('/all', async (req: Request, res: Response) => Controller.getAll(req, res));
+TeamRequestsRouter.get('/all', [
+    isLogedIn,
+    isNotBanned,
+    Roles(['MANAGER', 'ADMIN'])
+]
+, async (req: Request, res: Response) => Controller.getAll(req, res));
 
 TeamRequestsRouter.get('/leave-the-team', [
     isLogedIn,

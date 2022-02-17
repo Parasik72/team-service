@@ -16,8 +16,7 @@ export class BansService {
     }
 
     async createBan(dto: CreateBanDto): Promise<Ban> {
-        const ban = await Ban.create(dto);
-        return ban;
+        return await Ban.create(dto);
     }
 
     async unban(ban: Ban): Promise<Ban> {

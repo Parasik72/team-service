@@ -1,5 +1,7 @@
 import { Service } from "typedi";
 import { v4 } from "uuid";
+import { ProfilesService } from "../profiles/profiles.service";
+import { TeamsService } from "../teams/teams.service";
 import { User } from "../users/users.model";
 import { CreateRoleDto } from "./dto/create-role.dto";
 import { Role } from "./roles.model";
@@ -16,18 +18,15 @@ export class RolesService {
     }
 
     async createRole(dto: CreateRoleDto): Promise<Role> {
-        const role = await Role.create(dto);
-        return role;
+        return await Role.create(dto);
     }
 
     async getRoleByValue(value: string): Promise<Role | null> {
-        const role = await Role.findOne({where: {value}});
-        return role;
+        return await Role.findOne({where: {value}});
     }
 
     async getAllRoles(): Promise<Role[]> {
-        const roles = await Role.findAll();
-        return roles;
+        return await Role.findAll({include: [User]});
     }
 
     async deleteRoleByValue(value: string): Promise<string | null> {
@@ -39,16 +38,7 @@ export class RolesService {
     }
 
     async setRoleToUser(role: Role, user: User): Promise<User> {
-        await user.$add('roles', role);
-        if(user.roles)
-            user.roles.push(role);
-        else
-            user.roles = [role];
-        return user;
-    }
-
-    async unsetRoleFromUser(role: Role, user: User): Promise<User> {
-        user.roles = user.roles.filter(roleItem => roleItem.value !== role.value);
+        user.roleId = role.id;
         await user.save();
         return user;
     }

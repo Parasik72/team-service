@@ -1,4 +1,4 @@
-import { BelongsToMany, Column, DataType, Model, Table} from 'sequelize-typescript'
+import { BelongsToMany, Column, DataType, HasMany, Model, Table} from 'sequelize-typescript'
 import { UserRole } from '../users/user-role.model';
 import { User } from '../users/users.model';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -23,6 +23,6 @@ export class Role extends Model<RoleAttributes, CreateRoleDto>{
     })
     declare value: string;
 
-    @BelongsToMany(() => User, () => UserRole)
+    @HasMany(() => User)
     declare users: User[];
 }
