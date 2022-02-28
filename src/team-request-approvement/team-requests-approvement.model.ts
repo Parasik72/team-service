@@ -1,4 +1,4 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
 import { CreateTeamRequestApprovementDto } from './dto/create-team-request-approvement.dto';
 import { TeamRequest } from '../team-requests/team-requests.model';
 

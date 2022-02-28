@@ -4,13 +4,14 @@ import { Service } from 'typedi';
 import { CreateTeamKickDto } from '../team-kicks/dto/create-team-kick.dto';
 import { RolesService } from '../roles/roles.service';
 import { UsersService } from '../users/users.service';
-import { AddUserToTeam } from './dto/add-user-to-team.dto';
+import { AddUserToTeamDto } from './dto/add-user-to-team.dto';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { GetTeamByIdParamsDto } from './dto/get-team-by-id.dto';
 import { SetManagerBodyDto, SetManagerParamsDto } from './dto/set-manager.dto';
 import { TeamsService } from './teams.service';
 import { TeamKicksService } from '../team-kicks/team-kicks.service';
 import { TeamRequestsService } from '../team-requests/team-requests.service';
+import { HttpException, HttpExceptionMessages } from '../exceptions/HttpException';
 
 @Service()
 export class TeamsController {
@@ -23,15 +24,17 @@ export class TeamsController {
         try {
             const errors = validationResult(req);
             if(!errors.isEmpty())
-                return res.status(400).json({errors});
+                throw new HttpException(400, errors);
             const dto: CreateTeamDto = req.body;
             const checkName = await this.teamsService.getTeamByName(dto.teamName);
             if(checkName)
-                return res.status(400).json({message: 'This team name is already exists.'});
+                throw new HttpException(400, 'This team name is already exists.');
             const id = await this.teamsService.generateTeamId();
             const team = await this.teamsService.createTeam({...dto, id});
-            return res.json(team);
+            return res.status(201).json(team);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error creating team.'});
         }
@@ -41,18 +44,20 @@ export class TeamsController {
         try {
             const errors = validationResult(req);
             if(!errors.isEmpty())
-                return res.status(400).json({errors});
-            const dto: AddUserToTeam = req.body;
+                throw new HttpException(400, errors);
+            const dto: AddUserToTeamDto = req.body;
             const { teamId } = req.params;
             const team = await this.teamsService.getTeamById(teamId);
             if(!team)
-                return res.status(400).json({message: 'The team was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             const user = await this.usersService.getUserById(dto.userId);
             if(!user)
-                return res.status(400).json({message: 'The user was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             await this.teamsService.addUserToTeam(user, team);
             return res.json(team);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error adding user to team.'});
         }
@@ -72,8 +77,12 @@ export class TeamsController {
         try {
             const dto: GetTeamByIdParamsDto = req.params;
             const team = await this.teamsService.getTeamById(dto.teamId!);
+            if(!team)
+                throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             return res.json(team);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error getting team by id.'});
         }
@@ -83,15 +92,17 @@ export class TeamsController {
         try {
             const reqUser = req.user as Express.User;
             if(!reqUser)
-                return res.status(400).json({message: 'No access.'});
+                throw new HttpException(403, HttpExceptionMessages.NoAccess);
             const user = await this.usersService.getUserById(reqUser?.id);
             if(!user)
-                return res.status(400).json({message: 'The user was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const team = await this.teamsService.getTeamById(user.teamId!);
             if(!team)
-                return res.status(400).json({message: 'The team was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             return res.json(team);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error getting the team.'});
         }
@@ -103,19 +114,21 @@ export class TeamsController {
             const dtoParams: SetManagerParamsDto = req.params;
             const user = await this.usersService.getUserById(dtoBody.userId);
             if(!user)
-                return res.status(400).json({message: 'The user was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const team = await this.teamsService.getTeamById(dtoParams?.teamId!);
             if(!team)
-                return res.status(400).json({message: 'The team was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             const role = await this.rolesService.getRoleByValue('MANAGER');
             if(!role)
-                return res.status(400).json({message: 'Manager role was not found.'});
+                throw new HttpException(400, 'Manager role was not found.');
             const checkUserOnTheTeam = this.teamsService.userOnTheTeam(user, team);
             if(!checkUserOnTheTeam)
                 await this.teamsService.addUserToTeam(user, team);
             await this.teamsService.setManagerTeam(user, team);
             return res.json(team);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error setting the team manager.'});
         }
@@ -126,15 +139,17 @@ export class TeamsController {
             const dtoParams: SetManagerParamsDto = req.params;
             let team = await this.teamsService.getTeamById(dtoParams?.teamId!);
             if(!team)
-                return res.status(400).json({message: 'The team was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             if(!team.managerId)
-                return res.status(400).json({message: `This team hasn't a manager.`});
+                throw new HttpException(400, `This team hasn't a manager.`);
             const manager = await this.usersService.getUserById(team.managerId);
             if(!manager)
-                return res.status(400).json({message: 'The user was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             team = await this.teamsService.unsetManagerTeam(manager, team);
             return res.json(team);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error unsetting the team manager.'});
         }
@@ -144,24 +159,24 @@ export class TeamsController {
         try {
             const reqUser = req.user as Express.User;
             if(!reqUser)
-                return res.status(400).json({message: 'No access.'});
+                throw new HttpException(403, HttpExceptionMessages.NoAccess);
             const dtoBody: CreateTeamKickDto = req.body;
             const user = await this.usersService.getUserById(reqUser.id);
             if(!user)
-                return res.status(400).json({message: 'The user was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const kickUser = await this.usersService.getUserById(dtoBody.userId);
             if(!kickUser)
-                return res.status(400).json({message: 'The user was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const isAdmin = await this.usersService.isAdmin(user.id);
             if(!user.teamId && !isAdmin)
-                return res.status(400).json({message: `You don't have access to kick this user.`});
+                throw new HttpException(400, `You don't have access to kick this user.`);
             if(!kickUser.teamId)
-                return res.status(400).json({message: `This user is not a member of any team.`});
+                throw new HttpException(400, `This user is not a member of any team.`);
             const team = await this.teamsService.getTeamById(kickUser.teamId);
             if(!team)
-                return res.status(400).json({message: 'The team was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             if(kickUser.teamId !== user.teamId && !isAdmin)
-                return res.status(400).json({message: `You don't have access to kick this user.`});
+                throw new HttpException(400, `You don't have access to kick this user.`);
             const teamKickId = await this.teamKicksService.generateTeamKickId();
             const teamKick = await this.teamKicksService.createTeamKick({
                 ...dtoBody, 
@@ -177,6 +192,8 @@ export class TeamsController {
             await this.teamsService.kickUser(kickUser, team);
             return res.json(teamKick);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error kicking the user from team.'});
         }

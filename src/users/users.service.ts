@@ -1,4 +1,4 @@
-import { Inject, Service } from "typedi";
+import { Service } from "typedi";
 import { v4 } from "uuid";
 import { ProfilesService } from "../profiles/profiles.service";
 import { Role } from "../roles/roles.model";
@@ -25,15 +25,15 @@ export class UsersService {
     }
 
     async getUserByEmail(email: string): Promise<User | null> {
-        return await User.findOne({where:{email}, include: [Role]});
+        return User.findOne({where:{email}, include: [Role]});
     }
 
     async getUserById(userId: string): Promise<User | null> {
-        return await User.findByPk(userId, {include: [Role, TeamRequest, Ban]});
+        return User.findByPk(userId, {include: [Role, TeamRequest, Ban]});
     }
 
     async getAllUsers(): Promise<User[]>{
-        return await User.findAll({include: [Role, TeamRequest]});
+        return User.findAll({include: [Role, TeamRequest]});
     }
 
     async updateUser(dto: UpdateUserDto | ChangePasswordDto, user: User): Promise<User>{
@@ -65,7 +65,7 @@ export class UsersService {
     }
 
     async getUserByLogin(login: string): Promise<User | null> {
-        return await User.findOne({where: {login}, include: [Ban, Role]});
+        return User.findOne({where: {login}, include: [Ban, Role]});
     }
 
     async isAdmin(userId: string) {
@@ -88,5 +88,10 @@ export class UsersService {
         if(lastBan.unBannedAt)
             return null;
         return lastBan;
+    }
+
+    async setGoogleUser(user: User){
+        user.set('isGoogleAccount', true);
+        await user.save();
     }
 }

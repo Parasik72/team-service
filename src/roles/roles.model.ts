@@ -1,5 +1,4 @@
-import { BelongsToMany, Column, DataType, HasMany, Model, Table} from 'sequelize-typescript'
-import { UserRole } from '../users/user-role.model';
+import { Column, DataType, HasMany, Model, Table} from 'sequelize-typescript'
 import { User } from '../users/users.model';
 import { CreateRoleDto } from './dto/create-role.dto';
 

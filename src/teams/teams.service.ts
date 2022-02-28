@@ -1,4 +1,4 @@
-import { Inject, Service } from "typedi";
+import {  Service } from "typedi";
 import { Team } from "./teams.model";
 import * as uuid from 'uuid';
 import { CreateTeamDto } from "./dto/create-team.dto";
@@ -13,11 +13,11 @@ export class TeamsService {
     constructor(private rolesService: RolesService,
                 private usersService: UsersService){}
     async getTeamByName(teamName: string): Promise<Team | null> {
-        return await Team.findOne({where: {teamName}});
+        return Team.findOne({where: {teamName}});
     }
 
     async getTeamById(id: string): Promise<Team | null> {
-        return await Team.findByPk(id, {include: [User]});
+        return Team.findByPk(id, {include: [User]});
     }
 
     async generateTeamId(): Promise<string> {
@@ -30,17 +30,18 @@ export class TeamsService {
     }
 
     async createTeam(dto: CreateTeamDto): Promise<Team> {
-        return await Team.create(dto);
+        return Team.create(dto, {include: [User]});
     }
 
     async addUserToTeam(user: User, team: Team): Promise<Team> {
         await team.$add('users', user);
-        team.users.push(user);
+        if(team.users)
+            team.users.push(user);
         return team;
     }
 
     async getAll(): Promise<Team[]> {
-        return await Team.findAll({include: [User, TeamRequest, TeamKick]});
+        return Team.findAll({include: [User, TeamRequest, TeamKick]});
     }
 
     userOnTheTeam(user: User, team: Team): boolean {
@@ -80,7 +81,6 @@ export class TeamsService {
 
     async managerPost(user: User, team: Team){
         const checkUserOnTheTeam = this.userOnTheTeam(user, team);
-        console.log(this.rolesService);
         if(!checkUserOnTheTeam)
             await this.addUserToTeam(user, team);
         const manager = await this.getManagerTeam(team);

@@ -7,11 +7,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { ProfilesService } from '../profiles/profiles.service';
 import { GetUserIdParamsDto } from './dto/get-userId.dto';
-import { GetAvatarDto } from './dto/get-avatar.dto';
 import { CreateBanDto } from '../bans/dto/create-ban.dto';
 import { BansService } from '../bans/bans.service';
 import { TeamsService } from '../teams/teams.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { HttpException, HttpExceptionMessages } from '../exceptions/HttpException';
 
 @Service()
 export class UsersController{
@@ -23,24 +23,26 @@ export class UsersController{
         try {
             const errors = validationResult(req);
             if(!errors.isEmpty())
-                return res.status(400).json({errors});
+                throw new HttpException(400, errors);
             const dto: CreateUserDto = req.body;
             const checkEmail = await this.usersService.getUserByEmail(dto.email);
             if(checkEmail)
-                return res.status(400).json({message: 'This email is already in use.'});
+                throw new HttpException(400, HttpExceptionMessages.EmailInUse);
             const checkLogin = await this.usersService.getUserByLogin(dto.login);
             if(checkLogin)
-                return res.status(400).json({message: 'This login is already in use.'});
+                throw new HttpException(400, HttpExceptionMessages.LoginInUse);
             const hashPassword = await bcrypt.hash(dto.password!, 5);
             const userId = await this.usersService.generateUserId();
             const newUser = await this.usersService.createUser({...dto, password: hashPassword, id: userId});
             if(!newUser)
-                return res.status(500).json({message: 'Error creating user.'});
+                throw new HttpException(400, HttpExceptionMessages.CreatingUser);
             const avatarFile = req.files?.avatarFile;
             if(avatarFile)
                 await this.profilesService.uploadAvatar(newUser, avatarFile);
             return res.status(201).json(newUser);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error creating user.'});
         }
@@ -60,12 +62,14 @@ export class UsersController{
         try {
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const user = await this.usersService.getUserById(dtoParams.userId);
             if(!user)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             return res.json(user);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error getting an user.'});
         }
@@ -79,28 +83,30 @@ export class UsersController{
             const dto: UpdateUserDto = req.body;
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             let user = await this.usersService.getUserById(dtoParams.userId);
             if(!user)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             if(dto.email){
                 const checkEmail = await this.usersService.getUserByEmail(dto.email);
                 if(checkEmail)
-                    return res.status(400).json({message: 'This email is already in use.'});
+                    throw new HttpException(400, HttpExceptionMessages.EmailInUse);
             }
             if(dto.login){
                 const checkLogin = await this.usersService.getUserByLogin(dto.login);
                 if(checkLogin)
-                    return res.status(400).json({message: 'This login is already in use.'});
+                    throw new HttpException(400, HttpExceptionMessages.LoginInUse);
             }
             user = await this.usersService.updateUser(dto, user);
             if(!user)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const avatarFile = req.files?.avatarFile;
             if(avatarFile)
                 await this.profilesService.uploadAvatar(user, avatarFile);
             return res.json(user);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error updating user.'});
         }
@@ -110,12 +116,14 @@ export class UsersController{
         try {
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const userId = await this.usersService.deleteUser(dtoParams.userId);
             if(!userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             return res.json({message: `The user 'ID: ${userId}' was deleted.`});
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error deleting user.'});
         }
@@ -128,14 +136,14 @@ export class UsersController{
                 return res.status(400).json({errors});
             const reqUser = req.user as Express.User;
             if(!reqUser)
-                return res.status(400).json({message: 'No access.'});
+                throw new HttpException(403, HttpExceptionMessages.NoAccess);
             const dtoBody: CreateBanDto = req.body;
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const user = await this.usersService.getUserById(dtoParams.userId);
             if(!user)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             if(user.teamId){
                 const team = await this.teamsService.getTeamById(user.teamId);
                 if(team)
@@ -145,6 +153,8 @@ export class UsersController{
             const ban = await this.bansService.createBan({...dtoBody, id: banId, userId: user.id, bannedBy: reqUser.id});
             return res.json(ban);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error banning user.'});
         }
@@ -154,19 +164,21 @@ export class UsersController{
         try {
             const reqUser = req.user as Express.User;
             if(!reqUser)
-                return res.status(400).json({message: 'No access.'});
+                throw new HttpException(403, HttpExceptionMessages.NoAccess);
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const user = await this.usersService.getUserById(dtoParams.userId);
             if(!user)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             const lastBan = await this.usersService.isBanned(user);
             if(!lastBan)
-                return res.status(400).json({message: 'This user is not banned.'});
+                throw new HttpException(400, 'This user is not banned.');
             await this.bansService.unban(lastBan);
             return res.json(lastBan);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error unbanning user.'});
         }
@@ -180,18 +192,20 @@ export class UsersController{
             const dto: ChangePasswordDto = req.body;
             const dtoParams: GetUserIdParamsDto = req.params;
             if(!dtoParams.userId)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             let user = await this.usersService.getUserById(dtoParams.userId);
             if(!user)
-                return res.status(400).json({message: 'User was not found.'});
+                throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
             if(this.usersService.isGoogleAccount(user))
-                return res.status(400).json({message: `Google account can't change his password.`});
+                throw new HttpException(400, `Google account can't change his password.`);
             if(dto.password){
                 const hashPassword = await bcrypt.hash(dto.password!, 5)
                 user = await this.usersService.updateUser({...dto, password: hashPassword}, user);
             }
             return res.json(user);
         } catch (error) {
+            if(error instanceof HttpException)
+                return res.status(error.statusCode).json({message: error.message});
             console.log(error);
             return res.status(500).json({message: 'Error changing user password.'});
         }

@@ -41,4 +41,10 @@ export class ProfilesService {
         await user.save();
         return user;
     }
+
+    async setAvatarUrl(user: User, avatar: string): Promise<User> {
+        user.avatar = avatar;
+        await user.save();
+        return user;
+    }
 }

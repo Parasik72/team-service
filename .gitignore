@@ -2,3 +2,5 @@
 /dist
 /static
 .env
+.env.test
+.env.docker

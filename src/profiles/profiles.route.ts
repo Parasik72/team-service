@@ -8,13 +8,13 @@ import { ProfilesController } from "./profiles.controller";
 export const ProfilesRouter = express();
 const Controller = Container.get(ProfilesController);
 
-// 'GET' /profile
+// 'GET' /profiles
 ProfilesRouter.get('/', [
     isLogedIn,
     isNotBanned,
 ], async (req: Request, res: Response) => Controller.getProfile(req, res));
 
-// 'PATCH' /profile
+// 'PATCH' /profiles
 ProfilesRouter.patch('/', [
     isLogedIn,
     isNotBanned,

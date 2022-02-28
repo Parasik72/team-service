@@ -1,7 +1,5 @@
 import { Service } from "typedi";
 import { v4 } from "uuid";
-import { ProfilesService } from "../profiles/profiles.service";
-import { TeamsService } from "../teams/teams.service";
 import { User } from "../users/users.model";
 import { CreateRoleDto } from "./dto/create-role.dto";
 import { Role } from "./roles.model";
@@ -18,15 +16,15 @@ export class RolesService {
     }
 
     async createRole(dto: CreateRoleDto): Promise<Role> {
-        return await Role.create(dto);
+        return Role.create(dto);
     }
 
     async getRoleByValue(value: string): Promise<Role | null> {
-        return await Role.findOne({where: {value}});
+        return Role.findOne({where: {value}});
     }
 
     async getAllRoles(): Promise<Role[]> {
-        return await Role.findAll({include: [User]});
+        return Role.findAll({include: [User]});
     }
 
     async deleteRoleByValue(value: string): Promise<string | null> {
@@ -39,6 +37,7 @@ export class RolesService {
 
     async setRoleToUser(role: Role, user: User): Promise<User> {
         user.roleId = role.id;
+        user.role = role;
         await user.save();
         return user;
     }

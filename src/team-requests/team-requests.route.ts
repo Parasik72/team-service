@@ -35,7 +35,7 @@ TeamRequestsRouter.get('/all', [
 TeamRequestsRouter.get('/leave-the-team', [
     isLogedIn,
     isNotBanned,
-    Roles(['PLAYER', 'MANAGER'])
+    Roles(['PLAYER'])
 ], async (req: Request, res: Response) => Controller.leaveTheTeam(req, res));
 
 TeamRequestsRouter.get('/manager-post/:teamId', [

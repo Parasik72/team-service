@@ -3,6 +3,7 @@ declare namespace NodeJS {
         PORT: number;
         BASE_URL: string;
         WS_PORT: number;
+        WS_HOST: string;
         JWT_SECRET: string;
         SESSION_SECRET: string;
         STATIC_PATH: string;

@@ -9,9 +9,11 @@
 <body>
     <h1 style="background-color: #000; color: #fff;">WS connection status: <b id="WsConnectionStatus" style="color: #FF0000;">Disconected</b></h1>
     <h1 id="WS_PORT" style="display: none;"><%= WS_PORT %></h1>
+    <h1 id="WS_HOST" style="display: none;"><%= WS_HOST %></h1>
     <script>
         const WS_PORT = document.getElementById('WS_PORT').innerHTML;
-        const ws = new WebSocket(`ws://localhost:${WS_PORT}`);
+        const WS_HOST = document.getElementById('WS_HOST').innerHTML;
+        const ws = new WebSocket(`ws://${WS_HOST}:${WS_PORT}`);
         const wsConnectionStatus = document.getElementById('WsConnectionStatus');
         ws.onopen = () => {
             wsConnectionStatus.innerHTML = 'Connected';

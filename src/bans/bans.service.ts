@@ -2,7 +2,6 @@ import { Service } from "typedi";
 import { Ban } from "./bans.model";
 import { CreateBanDto } from "./dto/create-ban.dto";
 import * as uuid from 'uuid';
-import { User } from "../users/users.model";
 
 @Service()
 export class BansService {
@@ -16,7 +15,7 @@ export class BansService {
     }
 
     async createBan(dto: CreateBanDto): Promise<Ban> {
-        return await Ban.create(dto);
+        return Ban.create(dto);
     }
 
     async unban(ban: Ban): Promise<Ban> {

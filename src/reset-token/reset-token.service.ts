@@ -5,23 +5,21 @@ import { ResetToken } from "./reset-token.model";
 @Service()
 export class TokenService {
     async getTokenByUserId(userId: string): Promise<ResetToken | null> {
-        return await ResetToken.findOne({where: {userId}});
+        return ResetToken.findOne({where: {userId}});
     }
 
     async createToken(userId: string, value: string): Promise<ResetToken>{
-        const token = await ResetToken.create({
+        return ResetToken.create({
             userId,
             value
         });
-        return token;
     }
 
     async getTokenByUserIdAndTokenVal(userId: string, value: string): Promise<ResetToken | null>{
-        const token = await ResetToken.findOne({where: {
+        return ResetToken.findOne({where: {
             userId,
             value
         }});
-        return token;
     }
 
     async generateResetToken(): Promise<string> {
@@ -31,5 +29,9 @@ export class TokenService {
             role = await ResetToken.findByPk(id);
         } while (role);
         return id;
+    }
+
+    async deleteResetToken(resetToken: ResetToken): Promise<void> {
+        return resetToken.destroy();
     }
 }

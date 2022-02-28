@@ -34,8 +34,7 @@ export class TeamRequestApprovementsService {
     }
 
     async createTeamRequestApprovement(dto: CreateTeamRequestApprovementDto): Promise<TeamRequestApprovement> {
-        const teamRequestApprovement = await TeamRequestApprovement.create(dto);
-        return teamRequestApprovement;
+        return TeamRequestApprovement.create(dto);
     }
 
     async generateTeamRequestsApprovementId(): Promise<string> {

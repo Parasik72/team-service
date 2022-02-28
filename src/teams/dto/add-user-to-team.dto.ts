@@ -1,3 +1,3 @@
-export interface AddUserToTeam {
+export interface AddUserToTeamDto {
     userId: string;
 }

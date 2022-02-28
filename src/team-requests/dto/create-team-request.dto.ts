@@ -1,10 +1,10 @@
-import { TeamRequestStatusType, TeamRequestType } from "../team-requests.type";
+import { ETeamRequestStatusType, ETeamRequestTypes } from "../team-requests.type";
 
 export interface CreateTeamRequestDto {
     id?: string;
-    requestType?: TeamRequestType;
+    requestType?: ETeamRequestTypes;
     userId?: string;
     teamId: string;
     toTeamId?: string;
-    status?: TeamRequestStatusType;
+    status?: ETeamRequestStatusType;
 }
