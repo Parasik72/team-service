@@ -28,7 +28,7 @@ module.exports = {
 			},
 			lastName: {
 				type: Sequelize.STRING,
-				allowNull: false
+				allowNull: true
 			},
 			isGoogleAccount: {
 				type: Sequelize.BOOLEAN,

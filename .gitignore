@@ -1,6 +1,7 @@
 /node_modules
 /dist
 /static
+/postgres_data
 .env
 .env.test
 .env.docker

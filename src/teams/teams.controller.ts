@@ -115,7 +115,7 @@ export class TeamsController {
             const user = await this.usersService.getUserById(dtoBody.userId);
             if(!user)
                 throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
-            const team = await this.teamsService.getTeamById(dtoParams?.teamId!);
+            let team = await this.teamsService.getTeamById(dtoParams?.teamId!);
             if(!team)
                 throw new HttpException(400, HttpExceptionMessages.TeamWasNotFound);
             const role = await this.rolesService.getRoleByValue('MANAGER');
@@ -124,7 +124,13 @@ export class TeamsController {
             const checkUserOnTheTeam = this.teamsService.userOnTheTeam(user, team);
             if(!checkUserOnTheTeam)
                 await this.teamsService.addUserToTeam(user, team);
-            await this.teamsService.setManagerTeam(user, team);
+            if(team.managerId){
+                const manager = await this.usersService.getUserById(team.managerId);
+                if(!manager)
+                    throw new HttpException(400, HttpExceptionMessages.UserWasNotFound);
+                await this.teamsService.unsetManagerTeam(manager, team);
+            }
+            team = await this.teamsService.setManagerTeam(user, team);
             return res.json(team);
         } catch (error) {
             if(error instanceof HttpException)

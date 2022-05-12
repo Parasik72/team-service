@@ -145,7 +145,7 @@ export class AuthController{
                 const checkEmail = await this.usersService.getUserByEmail(dto.email!);
                 if(checkEmail)
                     throw new HttpException(400, HttpExceptionMessages.EmailInUse);
-                user = await this.usersService.createUser({...dto, id: userId, firstName: dto.given_name!, lastName: dto.family_name!, login: dto.email});
+                user = await this.usersService.createUser({...dto, id: userId, firstName: dto.given_name!, lastName: dto.family_name, login: dto.email});
                 if(!user)
                     throw new HttpException(400, HttpExceptionMessages.CreatingUser);
                 await this.usersService.setGoogleUser(user);

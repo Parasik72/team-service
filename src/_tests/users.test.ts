@@ -271,8 +271,7 @@ describe('users route', () => {
                 .set("authorization", `Bearer ${adminToken}`)
                 .expect(200);
             expect(body).toMatchObject({
-                id: playerUser.id,
-                roleId: playerUser.roleId
+                id: playerUser.id
             });
         });
         it('should return 400 status code', async () => {

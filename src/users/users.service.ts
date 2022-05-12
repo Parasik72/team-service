@@ -29,11 +29,15 @@ export class UsersService {
     }
 
     async getUserById(userId: string): Promise<User | null> {
+        return User.findByPk(userId, {include: [Role, TeamRequest, Ban], attributes: {exclude: ['password']}});
+    }
+
+    async gerUserByIdWithPassword(userId: string): Promise<User | null> {
         return User.findByPk(userId, {include: [Role, TeamRequest, Ban]});
     }
 
     async getAllUsers(): Promise<User[]>{
-        return User.findAll({include: [Role, TeamRequest]});
+        return User.findAll({include: [Role, TeamRequest], attributes: {exclude: ['password']}});
     }
 
     async updateUser(dto: UpdateUserDto | ChangePasswordDto, user: User): Promise<User>{

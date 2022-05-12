@@ -17,7 +17,8 @@ export class TeamsService {
     }
 
     async getTeamById(id: string): Promise<Team | null> {
-        return Team.findByPk(id, {include: [User]});
+        return Team.findByPk(id, {include: [{model: User, attributes: {exclude: ['password']}}, 
+            TeamRequest, TeamKick]});
     }
 
     async generateTeamId(): Promise<string> {
@@ -30,7 +31,7 @@ export class TeamsService {
     }
 
     async createTeam(dto: CreateTeamDto): Promise<Team> {
-        return Team.create(dto, {include: [User]});
+        return Team.create(dto, {include: [{model: User, attributes: {exclude: ['password']}}]});
     }
 
     async addUserToTeam(user: User, team: Team): Promise<Team> {
@@ -41,7 +42,8 @@ export class TeamsService {
     }
 
     async getAll(): Promise<Team[]> {
-        return Team.findAll({include: [User, TeamRequest, TeamKick]});
+        return Team.findAll({include: [{model: User, attributes: {exclude: ['password']}}, 
+            TeamRequest, TeamKick]});
     }
 
     userOnTheTeam(user: User, team: Team): boolean {

@@ -134,7 +134,7 @@ describe('auth', () => {
                 .post(`/auth/reset-pass/${user?.id}/${rtoken.value}`)
                 .send(data)
                 .expect(200);
-            const getUser = await usersService.getUserById(user?.id!);
+            const getUser = await usersService.gerUserByIdWithPassword(user?.id!);
             const password = await bcrypt.compare(data.password, getUser?.password!);
             expect(password).toBe(true);
         });
@@ -151,7 +151,7 @@ describe('auth', () => {
                 .post(`/auth/reset-pass/${user?.id}/${rtoken.value}`)
                 .send(data)
                 .expect(200);
-            const getUser = await usersService.getUserById(user?.id!);
+            const getUser = await usersService.gerUserByIdWithPassword(user?.id!);
             const password = await bcrypt.compare(data.password, getUser?.password!);
             expect(password).toBe(true);
         });

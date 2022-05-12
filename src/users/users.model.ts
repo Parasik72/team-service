@@ -55,7 +55,7 @@ export class User extends Model<UserAttributes, CreateUserDto>{
 
     @Column({
         type: DataType.STRING,
-        allowNull: false
+        allowNull: true
     })
     declare lastName: string;
 

@@ -24,7 +24,7 @@ export class RolesService {
     }
 
     async getAllRoles(): Promise<Role[]> {
-        return Role.findAll({include: [User]});
+        return Role.findAll({include: [{model: User, attributes: {exclude: ['password']}}]});
     }
 
     async deleteRoleByValue(value: string): Promise<string | null> {
@@ -37,7 +37,6 @@ export class RolesService {
 
     async setRoleToUser(role: Role, user: User): Promise<User> {
         user.roleId = role.id;
-        user.role = role;
         await user.save();
         return user;
     }

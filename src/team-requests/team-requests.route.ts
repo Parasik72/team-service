@@ -14,14 +14,14 @@ TeamRequestsRouter.post('/join-the-team', [
     isLogedIn,
     isNotBanned,
     Roles(['PLAYER']),
-    check('teamId', 'Incorrect team id').isString().isLength({min: 2, max: 40})
+    check('teamId', 'Incorrect team id').isString().isLength({min: 1, max: 40})
 ], async (req: Request, res: Response) => Controller.joinTheTeam(req, res));
 
 TeamRequestsRouter.post('/move-to-another-team', [
     isLogedIn,
     isNotBanned,
     Roles(['PLAYER']),
-    check('teamId', 'Incorrect team id').isString().isLength({min: 2, max: 40})
+    check('teamId', 'Incorrect team id').isString().isLength({min: 1, max: 40})
 ], async (req: Request, res: Response) => Controller.moveToAnotherTeam(req, res));
 
 // 'GET' /team-requests

@@ -9,9 +9,9 @@ declare namespace NodeJS {
         STATIC_PATH: string;
         POSTGRES_HOST: string;
         POSTGRES_PORT: number;
-        POSTGRES_USERNAME: string;
+        POSTGRES_USER: string;
         POSTGRES_PASSWORD: string;
-        POSTGRES_DATABASE: string;
+        POSTGRES_DB: string;
         EMAIL_HOST: string;
         EMAIL_PORT: number;
         EMAIL_USER: string;
