@@ -37,6 +37,7 @@ export class RolesService {
 
     async setRoleToUser(role: Role, user: User): Promise<User> {
         user.roleId = role.id;
+        user.role = role;
         await user.save();
         return user;
     }
